@@ -3,7 +3,7 @@
 ############################################################################################################
 CND                       = require 'cnd'
 rpr                       = CND.rpr
-badge                     = 'BASIC-STREAM-BENCHMARKS/COPY-LINES'
+badge                     = 'BASIC-STREAM-BENCHMARKS-2/COPY-LINES-WITH-READABLE-STREAM'
 debug                     = CND.get_logger 'debug',     badge
 warn                      = CND.get_logger 'warn',      badge
 info                      = CND.get_logger 'info',      badge
@@ -15,95 +15,157 @@ PATH                      = require 'path'
 FS                        = require 'fs'
 # OS                        = require 'os'
 #...........................................................................................................
+new_numeral               = require 'numeral'
+format_float              = ( x ) -> ( new_numeral x ).format '0,0.000'
+format_integer            = ( x ) -> ( new_numeral x ).format '0,0'
+#...........................................................................................................
+O                         = require './options'
 through2                  = require 'through2'
 $split                    = require 'binary-split'
-#...........................................................................................................
-O                         = {}
-O.inputs                  = {}
-O.outputs                 = {}
-O.inputs.long             = PATH.resolve __dirname, '../test-data/Unicode-NamesList.txt'
-O.inputs.short            = PATH.resolve __dirname, '../test-data/Unicode-NamesList-short.txt'
-O.inputs.tiny             = PATH.resolve __dirname, '../test-data/Unicode-NamesList-tiny.txt'
-O.outputs.lines           = PATH.resolve __dirname, '/tmp/basic-stream-benchmarks/lines.txt'
-#...........................................................................................................
 mkdirp                    = require 'mkdirp'
-PATCHER                   = require './patch-event-emitter'
+STREAM                    = require 'readable-stream'
 
-###
-adapted from
-https://strongloop.com/strongblog/practical-examples-of-the-new-node-js-streams-api/
-###
-
-
-# stream  = require 'stream'
-stream  = require 'readable-stream'
-
-
-#-----------------------------------------------------------------------------------------------------------
-$split = ->
-  #.........................................................................................................
-  R         = new stream.Transform objectMode: true
-  last_line = null
-  #.........................................................................................................
-  R._transform = ( chunk, encoding, done ) ->
-    data = chunk.toString()
-    if last_line?
-      data = last_line + data
-    lines = data.split '\n'
-    last_line = ( lines.splice lines.length - 1, 1 )[ 0 ]
-    lines.forEach @push.bind @
-    done()
-    return
-  #.........................................................................................................
-  R._flush = ( done ) ->
-    if last_line?
-      @push last_line
-    last_line = null
-    done()
-    return
-  #.........................................................................................................
-  return R
 
 #-----------------------------------------------------------------------------------------------------------
 $show = ->
-  #.........................................................................................................
-  R = new stream.Transform objectMode: true
-  #.........................................................................................................
-  R._transform = ( chunk, encoding, done ) ->
+  R = new STREAM.Transform objectMode: true
+  R._transform = ( chunk, _, done ) ->
     @push chunk
     # debug '11021', chunk.length
     debug '11021', chunk
     done()
-    return
-  #.........................................................................................................
   return R
 
 #-----------------------------------------------------------------------------------------------------------
 $pass = ->
-  #.........................................................................................................
-  R = new stream.Transform objectMode: true
-  #.........................................................................................................
-  R._transform = ( chunk, encoding, done ) ->
+  R = new STREAM.Transform objectMode: true
+  R._transform = ( chunk, _, done ) ->
     @push chunk
     done()
-    return
-  #.........................................................................................................
   return R
 
+#-----------------------------------------------------------------------------------------------------------
+$count = ->
+  R = new STREAM.Transform objectMode: true
+  R._transform = ( chunk, _, done ) ->
+    @push chunk
+    item_count += +1
+    done()
+  return R
 
-#===========================================================================================================
-mkdirp.sync PATH.dirname O.outputs.lines
-settings        = null
-# settings        = { highWaterMark: 16000, }
-# settings        = { highWaterMark: 1e6, }
-# input           = FS.createReadStream   O.inputs.tiny,    settings
-input           = FS.createReadStream   O.inputs.long,    settings
-output          = FS.createWriteStream  O.outputs.lines,  settings
-PATCHER.patch_timer_etc input, output
+#-----------------------------------------------------------------------------------------------------------
+$decode = ->
+  R = new STREAM.Transform objectMode: true
+  R._transform = ( chunk, _, done ) ->
+    @push chunk.toString()
+    done()
+  return R
 
-x = input
-x = x.pipe $split()
-# for idx in [ 1 .. 100 ]
-#   x = x.pipe $pass()
-x = x.pipe output
+#-----------------------------------------------------------------------------------------------------------
+$trim = ->
+  R = new STREAM.Transform objectMode: true
+  R._transform = ( line, _, done ) ->
+    @push line.trim()
+    done()
+  return R
+
+#-----------------------------------------------------------------------------------------------------------
+$filter_empty = ->
+  R = new STREAM.Transform objectMode: true
+  R._transform = ( line, _, done ) ->
+    @push line unless line.length is 0
+    done()
+  return R
+
+#-----------------------------------------------------------------------------------------------------------
+$filter_comments = ->
+  R = new STREAM.Transform objectMode: true
+  R._transform = ( line, _, done ) ->
+    @push line unless line.startsWith '#'
+    done()
+  return R
+
+#-----------------------------------------------------------------------------------------------------------
+$split_fields = ->
+  R = new STREAM.Transform objectMode: true
+  R._transform = ( line, _, done ) ->
+    @push line.split '\t'
+    done()
+  return R
+
+#-----------------------------------------------------------------------------------------------------------
+$select_fields = ->
+  R = new STREAM.Transform objectMode: true
+  R._transform = ( fields, _, done ) ->
+    [ _, glyph, formula, ] = fields
+    @push [ glyph, formula, ]
+    done()
+  return R
+
+#-----------------------------------------------------------------------------------------------------------
+$as_text = ->
+  R = new STREAM.Transform objectMode: true
+  R._transform = ( fields, _, done ) ->
+    @push JSON.stringify fields
+    done()
+  return R
+
+#-----------------------------------------------------------------------------------------------------------
+$as_line = ->
+  R = new STREAM.Transform objectMode: true
+  R._transform = ( text, _, done ) ->
+    @push text + '\n'
+    done()
+  return R
+
+#-----------------------------------------------------------------------------------------------------------
+mkdirp.sync PATH.dirname O.outputs.readablestream
+input_stream              = FS.createReadStream   O.inputs.ids
+output_stream             = FS.createWriteStream  O.outputs.readablestream
+
+#-----------------------------------------------------------------------------------------------------------
+t0                        = null
+t1                        = null
+item_count                = 0
+
+#-----------------------------------------------------------------------------------------------------------
+input_stream.on 'open', ->
+  t0 = Date.now()
+  help "input_stream: open"
+
+#-----------------------------------------------------------------------------------------------------------
+output_stream.on 'close', ->
+  t1              = Date.now()
+  dts             = ( t1 - t0 ) / 1000
+  dts_txt         = format_float dts
+  item_count_txt  = format_integer item_count
+  ips             = item_count / dts
+  ips_txt         = format_float ips
+  help "output_stream: close"
+  help "#{item_count_txt} items; dts: #{dts_txt}, ips: #{ips_txt}"
+  help 'ok'
+
+#-----------------------------------------------------------------------------------------------------------
+s = input_stream
+s = s.pipe $split()
+s = s.pipe $decode()
+s = s.pipe $count()
+s = s.pipe $trim()
+s = s.pipe $filter_empty()
+s = s.pipe $filter_comments()
+s = s.pipe $split_fields()
+s = s.pipe $select_fields()
+s = s.pipe $as_text()
+s = s.pipe $as_line()
+s = s.pipe $pass() for idx in [ 1 .. 100 ]
+s = s.pipe output_stream
+
+
+
+
+
+
+
+
+
 
