@@ -1,0 +1,43 @@
+{
+  "name": "basic-stream-benchmarks-2",
+  "version": "0.0.0",
+  "description": "assessing throughput performance of NodeJS streams",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "coffee --map -o lib -c src",
+    "test": "npm run build && node lib/tests.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/loveencounterflow/basic-stream-benchmarks-2.git"
+  },
+  "keywords": [
+    "pipes",
+    "streams",
+    "through2",
+    "benchmarks"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/loveencounterflow/basic-stream-benchmarks-2/issues"
+  },
+  "homepage": "https://github.com/loveencounterflow/basic-stream-benchmarks-2",
+  "dependencies": {
+    "binary-split": "^1.0.3",
+    "cnd": "^4.2.0",
+    "flamegraph": "^0.7.0",
+    "mkdirp": "^0.5.1",
+    "numeral": "^2.0.1",
+    "pull-split": "^0.2.0",
+    "pull-stream": "^3.5.0",
+    "pull-stream-to-stream": "^1.3.3",
+    "pull-stringify": "^2.0.0",
+    "pull-through": "^1.0.18",
+    "pull-utf8-decoder": "^1.0.2",
+    "readable-stream": "^2.2.2",
+    "stream-to-pull-stream": "^1.7.2",
+    "through2": "^2.0.1"
+  },
+  "devDependencies": {}
+}
