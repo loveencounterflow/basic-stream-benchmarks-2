@@ -30,60 +30,73 @@ STPS                      = require 'stream-to-pull-stream'
 
 
 #-----------------------------------------------------------------------------------------------------------
-mkdirp.sync PATH.dirname O.outputs.pullstream
-input_stream              = FS.createReadStream   O.inputs.ids
-output_stream             = FS.createWriteStream  O.outputs.pullstream
+@main = ( handler ) ->
 
-#-----------------------------------------------------------------------------------------------------------
-pipeline                  = []
-push                      = pipeline.push.bind pipeline
-t0                        = null
-t1                        = null
-item_count                = 0
+  #---------------------------------------------------------------------------------------------------------
+  mkdirp.sync PATH.dirname O.outputs.pullstream
+  input_stream              = FS.createReadStream   O.inputs.ids
+  output_stream             = FS.createWriteStream  O.outputs.pullstream
 
-#-----------------------------------------------------------------------------------------------------------
-input_stream.on 'open', ->
-  t0 = Date.now()
-  help "input_stream: open"
+  #---------------------------------------------------------------------------------------------------------
+  pipeline                  = []
+  push                      = pipeline.push.bind pipeline
+  t0                        = null
+  t1                        = null
+  item_count                = 0
 
-#-----------------------------------------------------------------------------------------------------------
-output_stream.on 'close', ->
-  t1              = Date.now()
-  dts             = ( t1 - t0 ) / 1000
-  dts_txt         = format_float dts
-  item_count_txt  = format_integer item_count
-  ips             = item_count / dts
-  ips_txt         = format_float ips
-  help "output_stream: close"
-  help "#{item_count_txt} items; dts: #{dts_txt}, ips: #{ips_txt}"
-  help 'ok'
+  #---------------------------------------------------------------------------------------------------------
+  input_stream.on 'open', ->
+    t0 = Date.now()
+    # help "input_stream: open"
 
-#-----------------------------------------------------------------------------------------------------------
-$input = -> STPS.source input_stream
+  #---------------------------------------------------------------------------------------------------------
+  output_stream.on 'close', ->
+    t1              = Date.now()
+    dts             = ( t1 - t0 ) / 1000
+    dts_txt         = format_float dts
+    item_count_txt  = format_integer item_count
+    ips             = item_count / dts
+    ips_txt         = format_float ips
+    help PATH.basename __filename
+    help "pass-through count: #{O.pass_through_count}"
+    help "#{item_count_txt} items; dts: #{dts_txt}, ips: #{ips_txt}"
+    handler()
 
-#-----------------------------------------------------------------------------------------------------------
-$output = ->
-  return STPS.sink output_stream, ( error ) ->
-    throw error if error?
-    t1  = Date.now()
-    dts = ( t1 - t0 ) / 1000
+  #---------------------------------------------------------------------------------------------------------
+  $count            = -> pull.map      ( line    ) -> item_count += +1; return line
+  $trim             = -> pull.map      ( line    ) -> line.trim()
+  $filter_empty     = -> pull.filter   ( line    ) -> line.length > 0
+  $filter_comments  = -> pull.filter   ( line    ) -> not line.startsWith '#'
+  $split_fields     = -> pull.map      ( line    ) -> line.split '\t'
+  $select_fields    = -> pull.map      ( fields  ) -> [ _, glyph, formula, ] = fields; return [ glyph, formula, ]
+  $as_text          = -> pull.map      ( fields  ) -> JSON.stringify fields
+  $as_line          = -> pull.map      ( line    ) -> line + '\n'
+  $pass             = -> pull.map      ( line    ) -> line
 
-#-----------------------------------------------------------------------------------------------------------
-push $input()
-push $utf8()
-push $split()
-push pull.map      ( line    ) -> item_count += +1; return line
-push pull.map      ( line    ) -> line.trim()
-push pull.filter   ( line    ) -> line.length > 0
-push pull.filter   ( line    ) -> not line.startsWith '#'
-# push pull.filter   ( line    ) -> ( /魚/ ).test line
-push pull.map      ( line    ) -> line.split '\t'
-push pull.map      ( fields  ) -> [ _, glyph, formula, ] = fields; return [ glyph, formula, ]
-push pull.map      ( fields  ) -> JSON.stringify fields
-push pull.map      ( line    ) -> line + '\n'
-push $output()
+  #---------------------------------------------------------------------------------------------------------
+  $input = -> STPS.source input_stream
 
+  #---------------------------------------------------------------------------------------------------------
+  $output = ->
+    return STPS.sink output_stream, ( error ) ->
+      throw error if error?
+      t1  = Date.now()
+      dts = ( t1 - t0 ) / 1000
 
-############################################################################################################
-pull pipeline...
+  #---------------------------------------------------------------------------------------------------------
+  push $input()
+  push $utf8()
+  push $split()
+  push $count()
+  push $trim()
+  push $filter_empty()
+  push $filter_comments()
+  # push pull.filter   ( line    ) -> ( /魚/ ).test line
+  push $split_fields()
+  push $select_fields()
+  push $as_text()
+  push $as_line()
+  push $output()
+  push $pass() for idx in [ 1 .. O.pass_through_count ] by +1
+  pull pipeline...
 
