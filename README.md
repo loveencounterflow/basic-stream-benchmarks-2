@@ -1,5 +1,15 @@
 # basic-stream-beanchmarks-2
 
+## Installation
+
+```bash
+git clone https://github.com/loveencounterflow/basic-stream-benchmarks-2.git
+cd basic-stream-benchmarks-2
+npm install
+```
+
+## Results
+
 | pass-through count | 0       | 100     | 200     | 300     |
 | ------:            | ------: | ------: | ------: | ------: |
 | **pipedreams**     | 4.38    | 21.36   | 40.21   | 59.4    |
@@ -35,7 +45,7 @@
 > **(Bottom)** in terms of
 > items (lines) per second (ips), Readable-Stream performance caves in from ~40,000ips to
 > around 5,000ips with a mere 100 No-Ops more in the pipeline. PipeDreams presumably worse as it makes heavy
-> use of composed stream transforms internally. Pull-Stream remains essentially uneffected; small,
+> use of composed stream transforms internally. Pull-Stream remains essentially unaffected; small,
 > counter-intuitive *increase* of throughput remains unexplained.
 
 
