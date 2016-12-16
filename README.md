@@ -29,12 +29,22 @@ second? The answer will, of course, vary according to hardware, details of the p
 of the input data, so I did my best to use simple implementations and an 'average' (well, for my daily work
 at least) data source.
 
-Then, I devised a maximally simple stream transform that does nothing but pass on each line as-is, and stick
+Then, I threw in a maximally simple stream transform that does nothing but pass on each line as-is, and stick
 variable numbers of those pass-through transforms into the processing pipeline. Ideally, you'd want to spend
 all your time doing meaningful work on the data, and see as little as possible time being spent in do-
 nothing functions. **Turns out every single stream transform you add to a NodeJS streams pipeline will
 worsen your throughput considerably**.
 
+I re-implemented the above using
+
+* [PipeDreams](https://github.com/loveencounterflow/pipedreams),
+* [Readable-Stream](https://github.com/nodejs/readable-stream), and
+* [Pull-Stream](https://github.com/pull-stream/pull-stream)).
+
+The big surprise here is really Pull-Stream: with a short pipeline, it is almost twice as performant
+as the Readable-Stream approach; when you stick a hundred or so no-op transforms into the pipeline,
+Pull-Stream remains unaffected, but **Readable-Stream drops to below 10% of Pull-Stream's performance**,
+and it gets consistently worse for Readable-Stream as you keep adding transforms.
 
 ## Methodology
 
