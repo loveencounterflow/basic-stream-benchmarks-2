@@ -10,22 +10,29 @@ npm install
 
 ## Motivation
 
-Being slightly disappointed with the performance of NodeJS standard issue streams (as available in the
-standard library or as standalone module, [Readable-Stream](https://github.com/nodejs/readable-stream), I
-started to experiment more systematically, especially with a view to improve performance of my own streaming
-library, [PipeDreams](https://github.com/loveencounterflow/pipedreams) (which is built on top of
-[through2](https://github.com/rvagg/through2), which is built on top of Readable-Stream).
+Being disappointed with the performance of NodeJS standard issue streams (as available in the
+standard library or as standalone module, [Readable-Stream](https://github.com/nodejs/readable-stream)), I
+started to experiment (especially with a view to improve performance of my own streaming
+library, [PipeDreams](https://github.com/loveencounterflow/pipedreams), which is built on top of
+[through2](https://github.com/rvagg/through2), which in turn is built on top of Readable-Stream).
 
-Much to my surprise and my chagrin, I soon found that one factor in the equation (not the only one, but in
+Much to my surprise and chagrin, I soon found that one factor in the equation (not the only one, but in
 longer  pipelines easily the dominant one) that determines how fast a NodeJS stream will pump data is the
 **mere length of a given processing pipeline** (i.e. the number of transforms between source and sink).
 
-In order to get a handle on exactly how performant NodeSJ streams are, I devised a simple and somewhat
-realistic processing task: given an MB-sized text file, read it, split it into lines, filter empty lines and
-comments, split each line on tabs, select some fields, serialize the fields with JSON, append a newline
-character to each line, and write them out into another file. Then, devise a maximally simple stream
-transform that does nothing but pass on each line as-is, and stickj variable numbers of those pass-through
-transforms into the processing pipeline.
+In order to get a handle on exactly how severe that effect is, I devised a simple and somewhat realistic
+processing task: given an MB-sized text file, read it, split it into lines, filter empty lines and comments,
+split each line on tabs, select some fields, serialize the fields with JSON, append a newline character to
+each line, and write them out into another file. This series of basic tasks sets the stage to answer the
+simple question, how many lines of  text can you process with NodeJS streams? The answer will, of course,
+widely vary according to hardware, details of the processing steps, and shape of the input data, so I did my
+best to use simple implementations and an 'average' (well, for my daily work at least) data source.
+
+Then, I devised a maximally simple stream transform that does nothing but pass on each line as-is, and stick
+variable numbers of those pass-through transforms into the processing pipeline. Ideally, you'd want to spend
+all your time doing meaningful work on the data, and see as little as possible time being spent in do-
+nothing functions. **Turns out every single stream transform you add to a NodeJS streams pipeline will
+worsen your throughput considerably**.
 
 
 ## Methodology
