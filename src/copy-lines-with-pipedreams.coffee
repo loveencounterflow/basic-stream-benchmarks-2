@@ -33,6 +33,17 @@ STREAM                    = require 'readable-stream'
 @main = ( handler ) ->
 
   #---------------------------------------------------------------------------------------------------------
+  if O.pass_through_asynchronous
+    $pass = ->
+      return $async ( data, send, end ) ->
+        if data?
+          setImmediate ->
+            send.done data
+        if end?
+          end()
+  else
+    $pass = D.$pass.bind D
+  #---------------------------------------------------------------------------------------------------------
   $count           = -> $ ( data        ) -> item_count += +1
   $trim            = -> $ ( line, send  ) -> send line.trim()
   $filter_empty    = -> $ ( line, send  ) -> send line unless line.length is 0
@@ -83,7 +94,7 @@ STREAM                    = require 'readable-stream'
   s = s.pipe $split_fields()
   s = s.pipe $select_fields()
   s = s.pipe D.$as_line()
-  s = s.pipe D.$pass() for idx in [ 1 .. O.pass_through_count ] by +1
+  s = s.pipe $pass() for idx in [ 1 .. O.pass_through_count ] by +1
   s = s.pipe output_stream
 
 

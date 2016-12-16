@@ -26,6 +26,7 @@ $stringify                = require 'pull-stringify'
 $utf8                     = require 'pull-utf8-decoder'
 pull                      = require 'pull-stream'
 through                   = require 'pull-through'
+async_map                 = require 'pull-stream/throughs/async-map'
 STPS                      = require 'stream-to-pull-stream'
 
 
@@ -71,7 +72,15 @@ STPS                      = require 'stream-to-pull-stream'
   $select_fields    = -> pull.map      ( fields  ) -> [ _, glyph, formula, ] = fields; return [ glyph, formula, ]
   $as_text          = -> pull.map      ( fields  ) -> JSON.stringify fields
   $as_line          = -> pull.map      ( line    ) -> line + '\n'
-  $pass             = -> pull.map      ( line    ) -> line
+
+  #---------------------------------------------------------------------------------------------------------
+  if O.pass_through_asynchronous
+    $pass = ->
+      return async_map ( data, handler ) ->
+        setImmediate ->
+          handler null, data
+  else
+    $pass = -> pull.map ( line ) -> line
 
   #---------------------------------------------------------------------------------------------------------
   $input = -> STPS.source input_stream

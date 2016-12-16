@@ -23,9 +23,11 @@ cli = ( require 'nash' )()
 run_copy_benchmarks = ( data, flags, done ) ->
   step ( resume ) ->
     urge "run 'copy' benchmarks"
-    # whisper '33301', data
-    # whisper '33301', flags
-    O.pass_through_count = flags[ 'n' ] ? 0
+    whisper '33301', data
+    whisper '33301', flags
+    O.pass_through_count        = flags[ 'n' ] ? 0
+    O.pass_through_asynchronous = flags[ 'a' ] ? false
+    # yield setImmediate resume
     yield ( require './copy-lines-with-pull-stream'     ).main resume
     yield ( require './copy-lines-with-readable-stream' ).main resume
     yield ( require './copy-lines-with-pipedreams'      ).main resume

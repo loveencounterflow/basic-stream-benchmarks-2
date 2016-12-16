@@ -31,9 +31,15 @@ STREAM                    = require 'readable-stream'
   #---------------------------------------------------------------------------------------------------------
   $pass = ->
     R = new STREAM.Transform objectMode: true
-    R._transform = ( chunk, _, done ) ->
-      @push chunk
-      done()
+    if O.pass_through_asynchronous
+      R._transform = ( chunk, _, done ) ->
+        setImmediate =>
+          @push chunk
+          done()
+    else
+      R._transform = ( chunk, _, done ) ->
+        @push chunk
+        done()
     return R
 
   #---------------------------------------------------------------------------------------------------------
