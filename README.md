@@ -29,8 +29,10 @@
 
 ![charts](https://raw.githubusercontent.com/loveencounterflow/basic-stream-benchmarks-2/master/charts.png)
 
-> Charts: **(Top)** marked, linear increase of processing time with number of pass-through transforms for
-> PipeDreams and Readable-Stream models; Pull-Stream remains unaffected.—**(Bottom)** in terms of
+> **(Top)** marked, linear increase of processing time with number of pass-through transforms for
+> PipeDreams and Readable-Stream models; Pull-Stream remains unaffected.
+>
+> **(Bottom)** in terms of
 > items (lines) per second (ips) of throughput, Readable-Stream performance caves in from ~40,000ips to
 > around 5,000ips with a mere 100 No-Ops more in the pipeline. PipeDreams presumably worse as it makes heavy
 > use of composed stream transforms internally. Pull-Stream remains essentially uneffected; small,
