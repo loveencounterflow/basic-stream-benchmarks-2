@@ -90,6 +90,12 @@ If I only knew whether
 
 ## Methodology
 
+
+Have a look at the sources, notably [the CoffeeScript I originally wrote](https://github.com/loveencounterflow/basic-stream-benchmarks-2/blob/master/src/copy-lines-with-readable-stream.coffee)
+or [the resulting JavaScript](https://github.com/loveencounterflow/basic-stream-benchmarks-2/blob/master/lib/copy-lines-with-readable-stream.js)
+if you prefer. By and large, all three implementations first define some stream transforms (or use
+ready-made modules as seen fit), then use those to pipe from input stream to output stream in object mode:
+
 ```coffee
 
 $trim = ->
