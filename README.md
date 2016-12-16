@@ -1,7 +1,5 @@
 # basic-stream-beanchmarks-2
 
-![charts](https://raw.githubusercontent.com/loveencounterflow/basic-stream-benchmarks-2/master/charts.png)
-
 | pass-through count | 0       | 100     | 200     | 300     |
 | ------:            | ------: | ------: | ------: | ------: |
 | **pipedreams**     | 4.38    | 21.36   | 40.21   | 59.4    |
@@ -10,9 +8,9 @@
 
 > Time taken (in seconds) to process and write 81,885 lines of text of file `test-data/ids.txt` (1,996,103
 > bytes) with 0, 100, 200, and 300 pass-through transforms in the pipeline, respectively, using three
-> processing models (built on [PipeDreams](https://github.com/loveencounterflow/pipedreams), [readable-
-> stream](https://github.com/nodejs/readable-stream), and [pull-stream](https://github.com/pull-stream/pull-
-> stream)). **Smaller is better**.
+> processing models (built on [PipeDreams](https://github.com/loveencounterflow/pipedreams),
+> [Readable-Stream](https://github.com/nodejs/readable-stream), and
+> [Pull-Stream](https://github.com/pull-stream/pull-stream)). **Smaller is better**.
 
 
 
@@ -25,9 +23,20 @@
 > Items (lines) per second achieved when processing and writing 81,885 lines of text of file `test-
 > data/ids.txt` (1,996,103 bytes) with 0, 100, 200, and 300 pass-through transforms in the pipeline,
 > respectively, using three processing models (built on
-> [PipeDreams](https://github.com/loveencounterflow/pipedreams), [readable-
-> stream](https://github.com/nodejs/readable-stream), and [pull-stream](https://github.com/pull-stream/pull-
-> stream)). **Bigger is better**.
+> [PipeDreams](https://github.com/loveencounterflow/pipedreams),
+> [Readable-Stream](https://github.com/nodejs/readable-stream), and
+> [Pull-Stream](https://github.com/pull-stream/pull-stream)). **Bigger is better**.
+
+![charts](https://raw.githubusercontent.com/loveencounterflow/basic-stream-benchmarks-2/master/charts.png)
+
+> Charts: **(Top)** marked, linear increase of processing time with number of pass-through transforms for
+> PipeDreams and Readable-Stream models; Pull-Stream remains unaffected.—**(Bottom)** in terms of
+> items (lines) per second (ips) of throughput, Readable-Stream performance caves in from ~40,000ips to
+> around 5,000ips with a mere 100 No-Ops more in the pipeline. PipeDreams presumably worse as it makes heavy
+> use of composed stream transforms internally. Pull-Stream remains essentially uneffected; small,
+> counter-intuitive *increase* of throughput remains unexplained.
+
+
 
 
 
