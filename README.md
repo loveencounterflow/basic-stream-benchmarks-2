@@ -10,23 +10,23 @@ npm install
 
 ## Motivation
 
-Being disappointed with the performance of NodeJS standard issue streams (as available in the
-standard library or as standalone module, [Readable-Stream](https://github.com/nodejs/readable-stream)), I
-started to experiment (especially with a view to improve performance of my own streaming
-library, [PipeDreams](https://github.com/loveencounterflow/pipedreams), which is built on top of
-[through2](https://github.com/rvagg/through2), which in turn is built on top of Readable-Stream).
+Being disappointed with the performance of NodeJS standard issue streams (as available in the standard
+library or as a standalone module, [Readable-Stream](https://github.com/nodejs/readable-stream)), I started
+to experiment to see how fast you can get with streams (especially with a view to improve performance of my
+own streaming library, [PipeDreams](https://github.com/loveencounterflow/pipedreams), which is built on top
+of [through2](https://github.com/rvagg/through2), which in turn is built on top of Readable-Stream).
 
 Much to my surprise and chagrin, I soon found that one factor in the equation (not the only one, but in
 longer  pipelines easily the dominant one) that determines how fast a NodeJS stream will pump data is the
 **mere length of a given processing pipeline** (i.e. the number of transforms between source and sink).
 
 In order to get a handle on exactly how severe that effect is, I devised a simple and somewhat realistic
-processing task: given an MB-sized text file, read it, split it into lines, filter empty lines and comments,
-split each line on tabs, select some fields, serialize the fields with JSON, append a newline character to
-each line, and write them out into another file. This series of basic tasks sets the stage to answer the
-simple question, how many lines of  text can you process with NodeJS streams? The answer will, of course,
-widely vary according to hardware, details of the processing steps, and shape of the input data, so I did my
-best to use simple implementations and an 'average' (well, for my daily work at least) data source.
+processing task: given an MB-sized text file, split it into lines, filter empty lines and comments, split
+each line on tabs, select some fields, serialize the fields with JSON, append a newline character to each
+line, and write them out into another file. This series of basic tasks provides a backdrop to answer the
+simple question, how many lines of text can you process with NodeJS streams each second? The answer will, of
+course, vary according to hardware, details of the processing steps, and shape of the input data, so
+I did my best to use simple implementations and an 'average' (well, for my daily work at least) data source.
 
 Then, I devised a maximally simple stream transform that does nothing but pass on each line as-is, and stick
 variable numbers of those pass-through transforms into the processing pipeline. Ideally, you'd want to spend
