@@ -33,7 +33,7 @@
 > PipeDreams and Readable-Stream models; Pull-Stream remains unaffected.
 >
 > **(Bottom)** in terms of
-> items (lines) per second (ips) of throughput, Readable-Stream performance caves in from ~40,000ips to
+> items (lines) per second (ips), Readable-Stream performance caves in from ~40,000ips to
 > around 5,000ips with a mere 100 No-Ops more in the pipeline. PipeDreams presumably worse as it makes heavy
 > use of composed stream transforms internally. Pull-Stream remains essentially uneffected; small,
 > counter-intuitive *increase* of throughput remains unexplained.
