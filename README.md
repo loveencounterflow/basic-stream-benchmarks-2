@@ -48,7 +48,7 @@ I re-implemented the above using
 
 * [PipeDreams](https://github.com/loveencounterflow/pipedreams),
 * [Readable-Stream](https://github.com/nodejs/readable-stream), and
-* [Pull-Stream](https://github.com/pull-stream/pull-stream)).
+* [Pull-Stream](https://github.com/pull-stream/pull-stream).
 
 The big surprise here is really Pull-Stream: with a short pipeline, it is almost twice as performant
 as the Readable-Stream approach; when you stick a hundred or so no-op transforms into the pipeline,
