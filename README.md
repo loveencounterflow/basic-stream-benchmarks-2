@@ -8,6 +8,63 @@ cd basic-stream-benchmarks-2
 npm install
 ```
 
+## Motivation
+
+Being slightly disappointed with the performance of NodeJS standard issue streams (as available in the
+standard library or as standalone module, [Readable-Stream](https://github.com/nodejs/readable-stream), I
+started to experiment more systematically, especially with a view to improve performance of my own streaming
+library, [PipeDreams](https://github.com/loveencounterflow/pipedreams) (which is built on top of
+[through2](https://github.com/rvagg/through2), which is built on top of Readable-Stream).
+
+Much to my surprise and my chagrin, I soon found that one factor in the equation (not the only one, but in
+longer  pipelines easily the dominant one) that determines how fast a NodeJS stream will pump data is the
+**mere length of a given processing pipeline** (i.e. the number of transforms between source and sink).
+
+In order to get a handle on exactly how performant NodeSJ streams are, I devised a simple and somewhat
+realistic processing task: given an MB-sized text file, read it, split it into lines, filter empty lines and
+comments, split each line on tabs, select some fields, serialize the fields with JSON, append a newline
+character to each line, and write them out into another file. Then, devise a maximally simple stream
+transform that does nothing but pass on each line as-is, and stickj variable numbers of those pass-through
+transforms into the processing pipeline.
+
+
+## Methodology
+
+```coffee
+
+$trim = ->
+  R = new STREAM.Transform objectMode: true
+  R._transform = ( line, _, done ) ->
+    @push line.trim()
+    done()
+  return R
+
+$filter_empty = ->
+  R = new STREAM.Transform objectMode: true
+  R._transform = ( line, _, done ) ->
+    @push line unless line.length is 0
+    done()
+  return R
+
+...
+
+s = input_stream
+s = s.pipe $split()
+s = s.pipe $decode()
+s = s.pipe $count()
+s = s.pipe $trim()
+s = s.pipe $filter_empty()
+s = s.pipe $filter_comments()
+s = s.pipe $split_fields()
+s = s.pipe $select_fields()
+s = s.pipe $as_text()
+s = s.pipe $as_line()
+s = s.pipe $pass() for idx in [ 1 .. O.pass_through_count ] by +1
+s = s.pipe output_stream
+
+
+```
+
 ## Results
 
 | pass-through count | 0       | 100     | 200     | 300     |
