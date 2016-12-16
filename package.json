@@ -26,7 +26,6 @@
   "dependencies": {
     "binary-split": "^1.0.3",
     "cnd": "^4.2.0",
-    "commander": "^2.9.0",
     "flamegraph": "^0.7.0",
     "mkdirp": "^0.5.1",
     "nash": "^2.0.4",
