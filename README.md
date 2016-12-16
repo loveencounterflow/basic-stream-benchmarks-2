@@ -6,6 +6,15 @@
 git clone https://github.com/loveencounterflow/basic-stream-benchmarks-2.git
 cd basic-stream-benchmarks-2
 npm install
+
+# to run three tests with, say, 123 no-op throughputs in the pipeline:
+node lib/cli.js copy -n 123
+
+# to see how your machine does in comparison to my figures:
+node lib/cli.js copy -n 0 && node lib/cli.js copy -n 100 && node lib/cli.js copy -n 200 && node lib/cli.js copy -n 300
+
+# to re-compile your CoffeeScript after you fiddled with the sources:
+npm run build
 ```
 
 ## Motivation
@@ -45,6 +54,39 @@ The big surprise here is really Pull-Stream: with a short pipeline, it is almost
 as the Readable-Stream approach; when you stick a hundred or so no-op transforms into the pipeline,
 Pull-Stream remains unaffected, but **Readable-Stream drops to below 10% of Pull-Stream's performance**,
 and it gets consistently worse for Readable-Stream as you keep adding transforms.
+
+
+## Conclusions
+
+Although I found precious little on the web to support my finds, I did find
+[issue 5429](https://github.com/nodejs/node-v0.x-archive/issues/5429) from May 2013. It seems to tell me
+that the NodeJS maintainers think the drop-in-performance-per-transform is acceptable and to be expected;
+the OP's summary states:
+
+> Transforming to 12 objects/KB to match my data pushes 768 objects per 64KB chunk. I get ~900K objects/sec
+> through that initial Transform, reducing my input throughput to 73MB/s. Adding one more Transform drops
+> throughput by another 50%; two by 70%; four by 80%; eight by 90%. Ouch.
+
+So there you have it.
+
+If you, like me, believed the hype that NodeJS streams are highly performant and that The Way to Go is
+to divide your data processing tasks into many small steps—your performance is going to suffer.
+
+**I guess that'd be about it if it wasn't for that Pull-Stream approach which allows me to write
+highly performant processing pipelines with lots of intermediate transforms (i.e. the way it should be).**
+
+If I only knew whether
+
+* ??? I did something wrong. Maybe there's something in the implementation of my transforms that slows them
+  down, more than would be necessary.
+
+* ??? These results are to be expected. Well I can't imagine that, but OTOH, isaacs back in May 2013 simply
+  commented "Every intermediary adds a bunch of function calls and event emission. It's not free.", and
+  closed the bug. That fixed it, right?
+
+* ??? I fell pray to some kind of non-canonical propaganda when I started to believe that NodeJS streams were
+  all about doing many little things to many little chunks in a performant way?
+
 
 ## Methodology
 
