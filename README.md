@@ -172,6 +172,7 @@ s = s.pipe output_stream
 > counter-intuitive *increase* of throughput remains unexplained.
 
 
+![charts](https://raw.githubusercontent.com/loveencounterflow/basic-stream-benchmarks-2/master/charts-2.png)
 
 
 
