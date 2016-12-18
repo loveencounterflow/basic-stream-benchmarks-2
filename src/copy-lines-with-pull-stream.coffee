@@ -105,7 +105,7 @@ STPS                      = require 'stream-to-pull-stream'
   push $select_fields()
   push $as_text()
   push $as_line()
-  push $output()
   push $pass() for idx in [ 1 .. O.pass_through_count ] by +1
+  push $output()
   pull pipeline...
 
